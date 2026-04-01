@@ -15,7 +15,6 @@ tbl_1 AS(
     FROM EMPLOYEES
     ORDER BY DEPARTMENT_ID,HIRE_DATE
 ),
-/*Поиск сотрудников из конкретного периода и поставим им дату месяцем назад.*/
 tbl_2 AS(
     SELECT EMPLOYEE_ID
          ,FIRST_NAME
@@ -32,19 +31,30 @@ tbl_3 AS(
          ,FIRST_NAME
          ,LAST_NAME
          ,start_date
-        -- ,end_date
          ,(end_date - 30) end_date
          ,DEPARTMENT_ID
     FROM tbl_2
     ORDER BY DEPARTMENT_ID,start_date
 )
+SELECT    EMPLOYEE_ID
+         ,FIRST_NAME
+         ,LAST_NAME
+         ,start_date
+         --,minus_30_dd
+         ,(CASE WHEN minus_30_dd IS NULL THEN end_date
+            ELSE minus_30_dd
+            END)end_date
+         ,DEPARTMENT_ID
+FROM(
 SELECT tbl_1.EMPLOYEE_ID
          ,tbl_1.FIRST_NAME
          ,tbl_1.LAST_NAME
          ,tbl_1.start_date
+         ,tbl_3.end_date minus_30_dd
          ,tbl_1.end_date
          ,tbl_1.DEPARTMENT_ID
 FROM tbl_1
 LEFT JOIN tbl_3
-ON tbl_1.start_date = tbl_3.start_date
-ORDER BY DEPARTMENT_ID,start_date;
+ON tbl_1.EMPLOYEE_ID = tbl_3.EMPLOYEE_ID
+ORDER BY DEPARTMENT_ID,start_date
+);
