@@ -1,4 +1,50 @@
-Сотрудников, ушедших с предприятия в периоде с 01ю01ю2004 по 31ю07ю2004 месяцем назад.
-Для начала найдем дату "увольнения" всех сотрудников на предприятии в каждом отделе.
-Затем выберем сотрудников из конкретного периода и поставим им дату месяцем назад.
-
+<h2>Постановка задачи</>
+Сотрудников, ушедших с предприятия в периоде с 01.01.2004 по 31.07.2004 месяцем назад.
+/*Для начала найдем дату "увольнения" всех сотрудников на предприятии в каждом отделе.*/
+WITH 
+tbl_1 AS(
+    SELECT EMPLOYEE_ID
+         ,FIRST_NAME
+         ,LAST_NAME
+         ,HIRE_DATE start_date
+         /*За дату увольнения возьмем дату прибытия нового сотрудника*/
+         /*Но предыдущий день*/
+         /*вместо null(действующий) проставим дату '31-12-5999'*/
+         ,LEAD(HIRE_DATE,1, DATE '6000-01-01') OVER (PARTITION BY DEPARTMENT_ID ORDER BY HIRE_DATE)- 1 end_date
+         ,DEPARTMENT_ID
+    FROM EMPLOYEES
+    ORDER BY DEPARTMENT_ID,HIRE_DATE
+),
+/*Поиск сотрудников из конкретного периода и поставим им дату месяцем назад.*/
+tbl_2 AS(
+    SELECT EMPLOYEE_ID
+         ,FIRST_NAME
+         ,LAST_NAME
+         ,start_date
+         ,end_date
+         ,DEPARTMENT_ID
+    FROM tbl_1
+    WHERE end_date BETWEEN DATE '2004-01-01' AND DATE '2004-07-31'
+    ORDER BY DEPARTMENT_ID,start_date
+),
+tbl_3 AS(
+    SELECT EMPLOYEE_ID
+         ,FIRST_NAME
+         ,LAST_NAME
+         ,start_date
+        -- ,end_date
+         ,(end_date - 30) end_date
+         ,DEPARTMENT_ID
+    FROM tbl_2
+    ORDER BY DEPARTMENT_ID,start_date
+)
+SELECT tbl_1.EMPLOYEE_ID
+         ,tbl_1.FIRST_NAME
+         ,tbl_1.LAST_NAME
+         ,tbl_1.start_date
+         ,tbl_1.end_date
+         ,tbl_1.DEPARTMENT_ID
+FROM tbl_1
+LEFT JOIN tbl_3
+ON tbl_1.start_date = tbl_3.start_date
+ORDER BY DEPARTMENT_ID,start_date;
